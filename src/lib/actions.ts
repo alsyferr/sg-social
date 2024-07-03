@@ -333,3 +333,72 @@ export const addPost = async (formData: FormData, img: string) => {
         throw new Error("Something went wrong")
     }
 }
+
+
+export const addStory = async (img: string) => {
+
+    const {userId} = auth()
+
+    if(!userId) {
+        throw new Error("user is not authenticated!")
+    }
+
+    try {
+
+        const existingStory = await prisma.story.findFirst({
+            where:{
+                userId
+            }
+        })
+
+        if(existingStory) {
+            await prisma.story.delete({
+                where:{
+                    id:existingStory.id,
+                }
+            })
+        }
+
+        const createdStory = await prisma.story.create({
+            data:{
+                userId,
+                img,
+                expiresAt:new Date(Date.now() + 24 * 60 * 60 * 1000)
+            },
+            include: {
+                user: true,
+            }
+        });
+
+        return createdStory;
+        
+    } catch (err) {
+        console.log(err)
+        throw new Error("Something went wrong")
+    }
+}
+
+
+export const deletePost = async (postId:number)=> {
+    const {userId} = auth()
+
+    if(!userId) {
+        throw new Error("user is not authenticated!")
+    }
+
+    try {
+
+        await prisma.post.delete({
+            where:{
+                id: postId,
+                userId,
+            }
+        })
+
+        revalidatePath("/")
+        
+    } catch (err) {
+        console.log(err)
+        throw new Error("Something went wrong") 
+    }
+}
