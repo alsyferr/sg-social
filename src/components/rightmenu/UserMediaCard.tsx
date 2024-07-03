@@ -1,9 +1,27 @@
+import prisma from '@/lib/client'
 import { User } from '@prisma/client'
 import Image from 'next/image'
 import Link from 'next/link'
 import React from 'react'
 
-const UserMediaCard = ({ user }: {user?: User}) => {
+const UserMediaCard = async ({ user }: {user: User}) => {
+
+  const postsWithMedia =await prisma.post.findMany({
+    where: {
+      userId: user.id,
+      img: {
+        not: null,
+      },
+    },
+    take: 8, 
+    orderBy: {
+      createdAt: "desc",
+    },
+  })
+
+
+
+
   return (
     <div className='p-4 bg-white shadow-md rounded-lg text-sm flex flex-col gap-4'>
 
@@ -15,10 +33,17 @@ const UserMediaCard = ({ user }: {user?: User}) => {
 
         {/* BOTTOM */}
         <div className="flex gap-4 justify-between flex-wrap">
-            <div className='relative w-1/5 h-24'>
-            <Image src="/stock1.jpg" alt='' fill className='object-cover rounded-md'/>
-            </div>
-            <div className='relative w-1/5 h-24'>
+            {postsWithMedia.length
+              ? postsWithMedia.map((post) => (
+                <div className='relative w-1/5 h-24' key={post.id}>
+                <Image src={post.img!} alt='' fill className='object-cover rounded-md'/>
+                </div>
+            ))
+          : "No media found!"
+          }
+            
+           
+            {/* <div className='relative w-1/5 h-24'>
             <Image src="/stock2.jpg" alt='' fill className='object-cover rounded-md'/>
             </div>
             <div className='relative w-1/5 h-24'>
@@ -38,7 +63,7 @@ const UserMediaCard = ({ user }: {user?: User}) => {
             </div>
             <div className='relative w-1/5 h-24'>
             <Image src="/stock8.jpg" alt='' fill className='object-cover rounded-md'/>
-            </div>
+            </div> */}
         </div>
 
 </div>

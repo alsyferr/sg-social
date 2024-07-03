@@ -1,8 +1,27 @@
+import prisma from '@/lib/client'
+import { auth } from '@clerk/nextjs/server'
 import Image from 'next/image'
 import Link from 'next/link'
 import React from 'react'
+import FriendRequestsList from './FriendRequestsList'
 
-const FriendRequests = () => {
+const FriendRequests = async () => {
+
+    const { userId } = auth();
+
+    if (!userId) return null;
+
+    const requests = await prisma.followRequest.findMany({
+        where: {
+            receiverId: userId,
+        },
+        include:{
+            sender: true,
+        },
+    });
+
+    if (requests.length === 0) return null;
+
   return (
     <div className='p-4 bg-white shadow-md rounded-lg text-sm flex flex-col gap-4'>
 
@@ -13,51 +32,10 @@ const FriendRequests = () => {
         </div>
 
         {/* USER */}
-        <div className="flex items-center justify-between">
+        <FriendRequestsList requests={requests} />
 
-            <div className="flex items-center gap-4">
-                <Image src="/faceavi.jpg" width={48} height={48} alt='' className='w-10 h-10 object-cover rounded-full'  />
-                <span>Wayne Burton</span>
-            </div>
-
-            <div className="flex gap-3 justify-end">
-                <Image src="/accept.png" width={20} height={20} alt='' className='cursor-pointer'  />
-                <Image src="/reject.png" width={20} height={20} alt='' className='cursor-pointer'  />
-            </div>
-
-
-        </div>
-
-        <div className="flex items-center justify-between">
-
-            <div className="flex items-center gap-4">
-                <Image src="/faceavi.jpg" width={48} height={48} alt='' className='w-10 h-10 object-cover rounded-full'  />
-                <span>Wayne Burton</span>
-            </div>
-
-            <div className="flex gap-3 justify-end">
-                <Image src="/accept.png" width={20} height={20} alt='' className='cursor-pointer'  />
-                <Image src="/reject.png" width={20} height={20} alt='' className='cursor-pointer'  />
-            </div>
-
-
-        </div>
-
-        <div className="flex items-center justify-between">
-
-            <div className="flex items-center gap-4">
-                <Image src="/faceavi.jpg" width={48} height={48} alt='' className='w-10 h-10 object-cover rounded-full'  />
-                <span>Wayne Burton</span>
-            </div>
-
-            <div className="flex gap-3 justify-end">
-                <Image src="/accept.png" width={20} height={20} alt='' className='cursor-pointer'  />
-                <Image src="/reject.png" width={20} height={20} alt='' className='cursor-pointer'  />
-            </div>
-
-
-        </div>
-
+        
+       
     </div>
   )
 }

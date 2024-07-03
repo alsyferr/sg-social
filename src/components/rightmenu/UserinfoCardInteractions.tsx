@@ -1,17 +1,15 @@
 "use client"
 
-import { switchFollow } from "@/lib/actions";
+import { switchBlock, switchFollow } from "@/lib/actions";
 import { useOptimistic, useState } from "react";
 
-const UserinfoCardInteractions = ({
+const UserInfoCardInteractions = ({
     userId,
-    currentUserId,
     isUserBlocked ,
     isFollowing,
     isFollowingSent,
     } : {
         userId: string;
-        currentUserId: string;
         isUserBlocked: boolean;
         isFollowing: boolean;
         isFollowingSent: boolean;
@@ -24,7 +22,7 @@ const UserinfoCardInteractions = ({
         })
 
         const follow = async () => {
-            switchOptimisticFollow(" ")
+            switchOptimisticState("follow");
 
             try {
                 await switchFollow(userId);
@@ -33,17 +31,30 @@ const UserinfoCardInteractions = ({
                     following:prev.following && false,
                     followingRequestSent: !prev.following && !prev.followingRequestSent ? true : false,
                 }))
-            } catch (err) {
-                
-            }
+            } catch (err) {}
+        };
+
+
+        const block  = async () => {
+            switchOptimisticState("block");
+            try {
+                await switchBlock(userId);
+                setUserState((prev) => ({
+                    ...prev,
+                    blocked: !prev.blocked,
+                }))
+            } catch (err) {}
         }
 
-        const [optimisticFollow, switchOptimisticFollow] = useOptimistic (
-            userState,(state) => ({
+        const [optimisticState, switchOptimisticState] = useOptimistic (
+            userState,
+            (state, value: "follow" | "block") => 
+                value === "follow" 
+                ? {
                 ...state,
                 following:state.following && false,
                 followingRequestSent: !state.following && !state.followingRequestSent ? true : false,
-            }) 
+            } : {...state, blocked: !state.blocked}
         )
 
 
@@ -51,21 +62,23 @@ const UserinfoCardInteractions = ({
     <>
         <form action={follow}>
             <button className=' w-full bg-blue-500 text-white text-sm rounded-md p-2'>
-                {optimisticFollow.following 
+                {optimisticState.following 
                 ? "Following" 
-                : optimisticFollow.followingRequestSent
+                : optimisticState.followingRequestSent
                 ? "Friend Request Sent" 
                 : "follow"}
             </button>
          </form>
 
-         <form className="self-end">
-            <span className='text-red-400 text-xs cursor-pointer'>
-                {optimisticFollow.blocked ? "Unblock User" : "Block User"}
-            </span>
+         <form action={block} className="self-end">
+            <button>
+                <span className='text-red-400 text-xs cursor-pointer'>
+                    {optimisticState.blocked ? "Unblock User" : "Block User"}
+                </span>
+            </button>
          </form>
     </>
   )
 }
 
-export default UserinfoCardInteractions
+export default UserInfoCardInteractions
